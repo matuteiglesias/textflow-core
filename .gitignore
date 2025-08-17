@@ -16,18 +16,15 @@ out/
 embedding_cache.sqlite
 embeds.sqlite
 *.sqlite
-/tmp/
-cache/
-hf_cache/
 .ipynb_checkpoints/
 
 # Chroma
 store/chroma/
 
-# Notebooks (keep dev local; remove these lines if you want to version them)
+# Notebooks (keep local; remove if you want them tracked)
 *.ipynb
 
-# Build/report artifacts
+# Run artifacts
 *.run.json
 *.run.md
 

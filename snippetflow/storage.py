@@ -112,6 +112,10 @@ def add_chroma_vectors(docs: List[Document]) -> None:
     logging.info("Chroma vectors stored → %s", CHROMA_DIR)
 
 
+def get_chroma_collection(name: str, path: str = "store/chroma"):
+    client = chromadb.PersistentClient(path=path)
+    return client.get_or_create_collection(name)
+
 # ##############################################################################
 # # 4.  Chroma collection – created once, reused forever
 # ##############################################################################
@@ -131,8 +135,3 @@ client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 
 # coll = get_or_reset_collection(COLL_NAME, EMBED_DIM)
 
-
-
-def get_chroma_collection(name: str, path: str = "store/chroma"):
-    client = chromadb.PersistentClient(path=path)
-    return client.get_or_create_collection(name)

@@ -452,6 +452,60 @@ def build_query_engine(
     return qe, retriever, num_nodes, build_seconds, model_id
 
 
+from pathlib import Path
+import chromadb
+from llama_index.core import StorageContext, VectorStoreIndex
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core.postprocessor import SimilarityPostprocessor
+from llama_index.core.retrievers import BaseRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from typing import Tuple, Any, List
+
+def build_query_engine(
+    docs: List[Document],
+    *,
+    multilingual: bool,
+    top_k: int,
+    token_cap: int,                    # kept for signature parity; apply during answering
+    embed_model: str,
+    cache_dir: str | None,
+    use_reranker: bool,
+    use_chroma: bool = True,
+    chroma_path: str | Path = "store/chroma",
+    chroma_collection: str = "gpt_logs",
+) -> Tuple[Any, BaseRetriever]:
+    # embeddings
+    model_id = embed_model
+    if multilingual and embed_model == "BAAI/bge-small-en-v1.5":
+        model_id = "intfloat/multilingual-e5-small"
+    embed = HuggingFaceEmbedding(model_name=model_id, cache_folder=cache_dir)
+    Settings.embed_model = embed
+
+    # index (persistent via Chroma, or ephemeral)
+    if use_chroma:
+        chroma_path = Path(chroma_path)
+        chroma_path.mkdir(parents=True, exist_ok=True)
+        client = chromadb.PersistentClient(path=str(chroma_path))
+        coll = client.get_or_create_collection(chroma_collection)
+        vstore = ChromaVectorStore(chroma_collection=coll)
+        store = StorageContext.from_defaults(vector_store=vstore)
+        index = VectorStoreIndex.from_documents(docs, storage_context=store, show_progress=True)
+    else:
+        index = VectorStoreIndex.from_documents(docs, show_progress=True)
+
+    retriever = index.as_retriever(similarity_top_k=top_k)
+
+    post = [SimilarityPostprocessor(similarity_cutoff=0.32)]
+    # NOTE: no TokenCapPostprocessor; cap in the context-only path.
+
+    qe = RetrieverQueryEngine(
+        retriever=retriever,
+        node_postprocessors=post,
+    )
+    return qe, retriever
+
+
 
 # NEW ────────────────────────────────────────────────────────────────────────
 @dataclass

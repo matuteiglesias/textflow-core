@@ -77,6 +77,37 @@ def iter_json_objects(fp) -> Iterator[dict]:
 
 
 
+import pathlib, json, argparse
+from typing import Dict
+
+
+def load_jsonl_as_documents(path: Path) -> List[Document]:
+    docs: List[Document] = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            # text = obj.get("aiResponse") or obj.get("response") or obj.get("text") or ""
+            text = obj.get("content") or ""
+            text = (text or "").strip()
+            if not text:
+                continue
+            meta = {
+                "exercise_id": obj.get("exerciseId"),
+                "user_id": obj.get("userId"),
+                "timestamp": obj.get("timestamp"),
+                "source": path.name,
+            }
+            docs.append(Document(text=text, metadata=meta))
+    return docs
+
+
+
 
 ###############################################################################
 # 2.  Parse -> List[Document]

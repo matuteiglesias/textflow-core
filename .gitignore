@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.venv/
+venv/
+.env
+.env.*
+*.env
+
+# Project data & caches
+store/
+exports/
+out/
+embedding_cache.sqlite
+embeds.sqlite
+*.sqlite
+/tmp/
+cache/
+hf_cache/
+.ipynb_checkpoints/
+
+# Chroma
+store/chroma/
+
+# Notebooks (keep dev local; remove these lines if you want to version them)
+*.ipynb
+
+# Build/report artifacts
+*.run.json
+*.run.md
+
+# OS
+.DS_Store
